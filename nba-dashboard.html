@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Playoffs 2026 — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #111118;
+      --surface2:  #1a1a24;
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.13);
+      --orange:    #f97316;
+      --blue:      #38bdf8;
+      --green:     #4ade80;
+      --red:       #f87171;
+      --muted:     #5a5a72;
+      --text:      #e2e2f0;
+      --text2:     #9090b0;
+      --mono:      'DM Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+      --display:   'Bebas Neue', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border2);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: var(--orange);
+      line-height: 1;
+    }
+    .logo span { color: var(--text2); font-size: 14px; font-family: var(--mono); display: block; letter-spacing: 1px; margin-top: 2px; }
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--orange);
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── LAYOUT ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: grid;
+      gap: 32px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border2);
+    }
+
+    /* ── NEXT GAMES ── */
+    .next-games {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .game-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 20px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .game-card:hover {
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .game-card.upcoming::before { background: var(--orange); }
+    .game-card.done::before    { background: var(--green); }
+
+    .game-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .game-meta .tag {
+      background: rgba(249,115,22,0.1);
+      color: var(--orange);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 9px;
+    }
+    .game-meta .tag.done-tag {
+      background: rgba(74,222,128,0.08);
+      color: var(--green);
+      border-color: rgba(74,222,128,0.2);
+    }
+
+    .matchup {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+    }
+    .team-abbr {
+      font-family: var(--display);
+      font-size: 36px;
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .team-name {
+      font-size: 11px;
+      color: var(--text2);
+      font-family: var(--mono);
+    }
+    .team-seed {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .team-score {
+      font-family: var(--display);
+      font-size: 40px;
+      letter-spacing: 1px;
+      color: var(--text2);
+    }
+    .team-score.winner { color: var(--green); }
+
+    .vs-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .vs-text {
+      font-family: var(--display);
+      font-size: 20px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .prob-bar {
+      width: 80px;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .prob-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 4px;
+    }
+
+    .game-footer {
+      margin-top: 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .game-prob-text { color: var(--blue); font-size: 10px; }
+
+    /* ── SERIES GRID ── */
+    .series-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .series-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      transition: border-color 0.15s;
+    }
+    .series-row:hover { border-color: var(--border2); }
+
+    .conf-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      width: 52px;
+      text-align: center;
+    }
+    .conf-badge.east { background: rgba(56,189,248,0.1); color: var(--blue); border: 1px solid rgba(56,189,248,0.2); }
+    .conf-badge.west { background: rgba(249,115,22,0.08); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+
+    .series-teams { flex: 1; font-family: var(--sans); font-size: 13px; color: var(--text); }
+    .series-teams em { color: var(--text2); font-style: normal; }
+
+    .pips { display: flex; gap: 3px; align-items: center; }
+    .pip {
+      width: 9px; height: 9px;
+      border-radius: 2px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+    }
+    .pip.a { background: var(--blue); border-color: transparent; }
+    .pip.b { background: var(--orange); border-color: transparent; }
+    .pip-sep { width: 1px; height: 9px; background: var(--border2); margin: 0 2px; }
+
+    .series-result {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .series-result.done { background: rgba(74,222,128,0.08); color: var(--green); border: 1px solid rgba(74,222,128,0.15); }
+    .series-result.soon { background: rgba(249,115,22,0.08); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+
+    /* ── BRACKET TABLE ── */
+    .bracket-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      font-family: var(--sans);
+    }
+    .bracket-table thead tr {
+      border-bottom: 1px solid var(--border2);
+    }
+    .bracket-table th {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      font-weight: 400;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .bracket-table td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      vertical-align: middle;
+    }
+    .bracket-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+    .team-cell { display: flex; align-items: center; gap: 10px; }
+    .team-logo-ph {
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--display);
+      font-size: 14px;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .logo-okc { background: rgba(0,125,195,0.15); color: #007dc3; border: 1px solid rgba(0,125,195,0.3); }
+    .logo-nyk { background: rgba(0,119,194,0.15); color: #0077c2; border: 1px solid rgba(0,119,194,0.3); }
+    .logo-sas { background: rgba(196,206,211,0.1); color: #c4ced3; border: 1px solid rgba(196,206,211,0.2); }
+    .logo-cle { background: rgba(134,0,56,0.15); color: #860038; border: 1px solid rgba(134,0,56,0.3); }
+
+    .team-full { font-size: 13px; color: var(--text); }
+    .team-city { font-size: 11px; color: var(--text2); }
+
+    .prob-cell { display: flex; align-items: center; gap: 8px; }
+    .prob-num { font-family: var(--mono); font-size: 13px; }
+    .prob-num.fav { color: var(--green); }
+    .prob-num.und { color: var(--muted); }
+
+    .seed-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--text2);
+    }
+
+    .status-pill {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .status-pill.upcoming { background: rgba(249,115,22,0.1); color: var(--orange); border: 1px solid rgba(249,115,22,0.25); }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .code-header {
+      background: var(--surface2);
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+    pre {
+      padding: 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.8;
+      overflow-x: auto;
+      color: var(--text2);
+    }
+    .kw  { color: #c792ea; }
+    .str { color: #c3e88d; }
+    .num { color: #f78c6c; }
+    .cmt { color: #546e7a; font-style: italic; }
+    .fn  { color: #82aaff; }
+    .prop{ color: #89ddff; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .footer-status { display: flex; align-items: center; gap: 8px; color: var(--green); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .next-games, .series-grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    NBA PLAYOFFS
+    <span>// 2026 DASHBOARD</span>
+  </div>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    Dados ao vivo · 18 Mai 2026
+  </div>
+</header>
+
+<main>
+
+  <!-- PRÓXIMOS JOGOS -->
+  <section>
+    <div class="section-label">Próximos jogos — Finais de Conferência</div>
+    <div class="next-games">
+
+      <!-- OKC vs SAS -->
+      <div class="game-card upcoming">
+        <div class="game-meta">
+          <span>Oeste · Game 1</span>
+          <span class="tag">HOJE · 21:30 BRT</span>
+        </div>
+        <div class="matchup">
+          <div class="team">
+            <div class="team-abbr">OKC</div>
+            <div class="team-name">Thunder</div>
+            <div class="team-seed">#1 seed</div>
+          </div>
+          <div class="vs-col">
+            <div class="vs-text">VS</div>
+            <div class="prob-bar"><div class="prob-fill" style="width:69.5%"></div></div>
+          </div>
+          <div class="team">
+            <div class="team-abbr">SAS</div>
+            <div class="team-name">Spurs</div>
+            <div class="team-seed">#2 seed</div>
+          </div>
+        </div>
+        <div class="game-footer">
+          <span>Oklahoma City · Paycom Center</span>
+          <span class="game-prob-text">OKC 69.5% · SAS 30.5%</span>
+        </div>
+      </div>
+
+      <!-- NYK vs CLE -->
+      <div class="game-card upcoming">
+        <div class="game-meta">
+          <span>Leste · Game 1</span>
+          <span class="tag">AMANHÃ · 21:00 BRT</span>
+        </div>
+        <div class="matchup">
+          <div class="team">
+            <div class="team-abbr">NYK</div>
+            <div class="team-name">Knicks</div>
+            <div class="team-seed">#3 seed</div>
+          </div>
+          <div class="vs-col">
+            <div class="vs-text">VS</div>
+            <div class="prob-bar"><div class="prob-fill" style="width:70.2%"></div></div>
+          </div>
+          <div class="team">
+            <div class="team-abbr">CLE</div>
+            <div class="team-name">Cavaliers</div>
+            <div class="team-seed">#4 seed</div>
+          </div>
+        </div>
+        <div class="game-footer">
+          <span>New York · Madison Square Garden</span>
+          <span class="game-prob-text">NYK 70.2% · CLE 29.8%</span>
+        </div>
+      </div>
+
+      <!-- DET vs CLE — Game 7 -->
+      <div class="game-card done">
+        <div class="game-meta">
+          <span>Leste · Semifinal Game 7</span>
+          <span class="tag done-tag">ENCERRADO</span>
+        </div>
+        <div class="matchup">
+          <div class="team">
+            <div class="team-abbr">DET</div>
+            <div class="team-score">94</div>
+            <div class="team-seed">#1 seed</div>
+          </div>
+          <div class="vs-col">
+            <div class="vs-text">—</div>
+          </div>
+          <div class="team">
+            <div class="team-abbr">CLE</div>
+            <div class="team-score winner">125</div>
+            <div class="team-seed">#4 seed</div>
+          </div>
+        </div>
+        <div class="game-footer">
+          <span>Dom 17/05 · Cleveland avança</span>
+          <span style="color: var(--green); font-family: var(--mono); font-size:11px;">CLE vence a série 4–3</span>
+        </div>
+      </div>
+
+      <!-- MIN vs SAS — Game 6 -->
+      <div class="game-card done">
+        <div class="game-meta">
+          <span>Oeste · Semifinal Game 6</span>
+          <span class="tag done-tag">ENCERRADO</span>
+        </div>
+        <div class="matchup">
+          <div class="team">
+            <div class="team-abbr">MIN</div>
+            <div class="team-score">109</div>
+            <div class="team-seed">#6 seed</div>
+          </div>
+          <div class="vs-col">
+            <div class="vs-text">—</div>
+          </div>
+          <div class="team">
+            <div class="team-abbr">SAS</div>
+            <div class="team-score winner">139</div>
+            <div class="team-seed">#2 seed</div>
+          </div>
+        </div>
+        <div class="game-footer">
+          <span>Sex 15/05 · San Antonio avança</span>
+          <span style="color: var(--green); font-family: var(--mono); font-size:11px;">SAS vence a série 4–2</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SÉRIES -->
+  <section>
+    <div class="section-label">Séries — Playoffs 2026</div>
+    <div class="series-grid">
+
+      <div class="series-row">
+        <div class="conf-badge west">Oeste</div>
+        <div class="series-teams"><strong>OKC</strong> <em>vs</em> <strong>SAS</strong></div>
+        <div class="pips">
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+          <div class="pip-sep"></div>
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+        <div class="series-result soon">0–0</div>
+      </div>
+
+      <div class="series-row">
+        <div class="conf-badge east">Leste</div>
+        <div class="series-teams"><strong>NYK</strong> <em>vs</em> <strong>CLE</strong></div>
+        <div class="pips">
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+          <div class="pip-sep"></div>
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+        <div class="series-result soon">0–0</div>
+      </div>
+
+      <div class="series-row">
+        <div class="conf-badge east">Leste</div>
+        <div class="series-teams"><strong>CLE</strong> <em>def.</em> DET</div>
+        <div class="pips">
+          <div class="pip a"></div><div class="pip a"></div><div class="pip a"></div><div class="pip a"></div>
+          <div class="pip-sep"></div>
+          <div class="pip b"></div><div class="pip b"></div><div class="pip b"></div><div class="pip"></div>
+        </div>
+        <div class="series-result done">4–3 ✓</div>
+      </div>
+
+      <div class="series-row">
+        <div class="conf-badge west">Oeste</div>
+        <div class="series-teams"><strong>OKC</strong> <em>def.</em> LAL</div>
+        <div class="pips">
+          <div class="pip a"></div><div class="pip a"></div><div class="pip a"></div><div class="pip a"></div>
+          <div class="pip-sep"></div>
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+        <div class="series-result done">4–0 ✓</div>
+      </div>
+
+      <div class="series-row">
+        <div class="conf-badge east">Leste</div>
+        <div class="series-teams"><strong>NYK</strong> <em>def.</em> PHI</div>
+        <div class="pips">
+          <div class="pip a"></div><div class="pip a"></div><div class="pip a"></div><div class="pip a"></div>
+          <div class="pip-sep"></div>
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+        <div class="series-result done">4–0 ✓</div>
+      </div>
+
+      <div class="series-row">
+        <div class="conf-badge west">Oeste</div>
+        <div class="series-teams"><strong>SAS</strong> <em>def.</em> MIN</div>
+        <div class="pips">
+          <div class="pip a"></div><div class="pip a"></div><div class="pip a"></div><div class="pip a"></div>
+          <div class="pip-sep"></div>
+          <div class="pip b"></div><div class="pip b"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+        <div class="series-result done">4–2 ✓</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BRACKET TABLE -->
+  <section>
+    <div class="section-label">Times nas Finais de Conferência</div>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;overflow:hidden;">
+      <table class="bracket-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Conf.</th>
+            <th>Seed</th>
+            <th>Fase</th>
+            <th>Prob. título conf.</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="team-cell">
+                <div class="team-logo-ph logo-okc">OKC</div>
+                <div>
+                  <div class="team-full">Oklahoma City Thunder</div>
+                  <div class="team-city">Oklahoma City, OK</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="conf-badge west" style="display:inline-block">Oeste</span></td>
+            <td><span class="seed-badge">#1</span></td>
+            <td style="color:var(--text)">Finals de Conf.</td>
+            <td><div class="prob-cell"><span class="prob-num fav">69.5%</span></div></td>
+            <td><span class="status-pill upcoming">JOGA HOJE</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="team-cell">
+                <div class="team-logo-ph logo-nyk">NYK</div>
+                <div>
+                  <div class="team-full">New York Knicks</div>
+                  <div class="team-city">New York, NY</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="conf-badge east" style="display:inline-block">Leste</span></td>
+            <td><span class="seed-badge">#3</span></td>
+            <td style="color:var(--text)">Finals de Conf.</td>
+            <td><div class="prob-cell"><span class="prob-num fav">70.2%</span></div></td>
+            <td><span class="status-pill upcoming">JOGA AMANHÃ</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="team-cell">
+                <div class="team-logo-ph logo-sas">SAS</div>
+                <div>
+                  <div class="team-full">San Antonio Spurs</div>
+                  <div class="team-city">San Antonio, TX</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="conf-badge west" style="display:inline-block">Oeste</span></td>
+            <td><span class="seed-badge">#2</span></td>
+            <td style="color:var(--text)">Finals de Conf.</td>
+            <td><div class="prob-cell"><span class="prob-num und">30.5%</span></div></td>
+            <td><span class="status-pill upcoming">JOGA HOJE</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="team-cell">
+                <div class="team-logo-ph logo-cle">CLE</div>
+                <div>
+                  <div class="team-full">Cleveland Cavaliers</div>
+                  <div class="team-city">Cleveland, OH</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="conf-badge east" style="display:inline-block">Leste</span></td>
+            <td><span class="seed-badge">#4</span></td>
+            <td style="color:var(--text)">Finals de Conf.</td>
+            <td><div class="prob-cell"><span class="prob-num und">29.8%</span></div></td>
+            <td><span class="status-pill upcoming">JOGA AMANHÃ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CODE BLOCK decorativo -->
+  <section>
+    <div class="section-label">Previsão das Finals</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#ffbd2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <span style="margin-left:8px">nba-finals-2026.js</span>
+      </div>
+      <pre><span class="cmt">// NBA Finals 2026 — Previsão</span>
+
+<span class="kw">const</span> <span class="prop">finalsDate</span> = <span class="str">"04 Jun 2026"</span>;
+
+<span class="kw">const</span> <span class="prop">favorites</span> = {
+  <span class="prop">west</span>: { team: <span class="str">"OKC Thunder"</span>, prob: <span class="num">69.5</span> },
+  <span class="prop">east</span>: { team: <span class="str">"NYK Knicks"</span>,  prob: <span class="num">70.2</span> },
+};
+
+<span class="kw">const</span> <span class="prop">underdogs</span> = {
+  <span class="prop">west</span>: { team: <span class="str">"SAS Spurs"</span>,     prob: <span class="num">30.5</span> },
+  <span class="prop">east</span>: { team: <span class="str">"CLE Cavaliers"</span>, prob: <span class="num">29.8</span> },
+};
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`Finals esperada: OKC vs NYK 🏆`</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`Mas basquete nunca é previsível... 🏀`</span>);</pre>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>🏀 NBA Playoffs 2026 Dashboard</span>
+  <div class="footer-status">
+    <div class="live-dot"></div>
+    OKC vs SAS começa hoje · 21:30 BRT
+  </div>
+  <span>Finals: 4 Jun 2026</span>
+</footer>
+
+</body>
+</html>
